@@ -1,0 +1,5 @@
+name: PrefixStacker
+main: me.vemacs.prefixstacker.PrefixStacker
+version: 1.0
+author: vemacs
+depend: [Vault]
