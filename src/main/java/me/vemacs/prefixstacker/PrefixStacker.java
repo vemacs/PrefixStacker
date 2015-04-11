@@ -1,6 +1,5 @@
 package me.vemacs.prefixstacker;
 
-import com.google.common.base.Joiner;
 import net.milkbowl.vault.chat.Chat;
 import net.milkbowl.vault.permission.Permission;
 import org.bukkit.ChatColor;
