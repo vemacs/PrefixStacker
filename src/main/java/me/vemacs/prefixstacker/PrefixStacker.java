@@ -45,9 +45,7 @@ public class PrefixStacker extends JavaPlugin implements Listener {
     public boolean hasSpecialPrefix(Player player) {
         String playerPrefix = chat.getPlayerPrefix(player);
         if (playerPrefix == null || playerPrefix.isEmpty()) return false;
-        List<String> groups = new ArrayList<>(Arrays.asList(permission.getPlayerGroups(player)));
-        Collections.reverse(groups);
-        for (String group : groups) {
+        for (String group : permission.getGroups()) {
             if (playerPrefix.equals(chat.getGroupPrefix(player.getWorld(), group))) return false;
         }
         return true;
