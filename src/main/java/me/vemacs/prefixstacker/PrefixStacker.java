@@ -65,7 +65,7 @@ public class PrefixStacker extends JavaPlugin implements Listener {
         return "";
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player p = event.getPlayer();
         if (!hasSpecialPrefix(p)) chat.setPlayerPrefix(p, getStackedPrefix(p));
