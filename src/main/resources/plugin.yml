@@ -3,3 +3,13 @@ main: me.vemacs.prefixstacker.PrefixStacker
 version: 1.0
 author: vemacs
 depend: [Vault]
+commands:
+  psinvalidate:
+    description: Invalidates PrefixStacker group prefix cache.
+    permission: prefixstacker.admin
+    usage: /psinvalidate
+permissions:
+  prefixstacker.admin:
+    description: Grants /psinvalidate access
+    default: op
+

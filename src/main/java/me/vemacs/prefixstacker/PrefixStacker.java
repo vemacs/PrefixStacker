@@ -2,28 +2,39 @@ package me.vemacs.prefixstacker;
 
 import net.milkbowl.vault.chat.Chat;
 import net.milkbowl.vault.permission.Permission;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class PrefixStacker extends JavaPlugin implements Listener {
     public static Permission permission = null;
     public static Chat chat = null;
+
+    private static Map<String, String> groupPrefixCache = new ConcurrentHashMap<>();
 
     @Override
     public void onEnable() {
         setupPermissions();
         setupChat();
         getServer().getPluginManager().registerEvents(this, this);
+        updateGroupPrefixCache();
+        getCommand("psinvalidate").setExecutor(new InvalidateCommand());
+    }
+
+    public static void updateGroupPrefixCache() {
+        for (String group : permission.getGroups()) {
+            groupPrefixCache.put(group,
+                    chat.getGroupPrefix((World) null, group));
+        }
     }
 
     private boolean setupPermissions() {
@@ -44,18 +55,14 @@ public class PrefixStacker extends JavaPlugin implements Listener {
 
     public boolean hasSpecialPrefix(Player player) {
         String playerPrefix = chat.getPlayerPrefix(player);
-        if (playerPrefix == null || playerPrefix.isEmpty()) return false;
-        for (String group : permission.getGroups()) {
-            if (playerPrefix.equals(chat.getGroupPrefix(player.getWorld(), group))) return false;
-        }
-        return true;
+        return !(playerPrefix == null || playerPrefix.isEmpty()) && !groupPrefixCache.containsValue(playerPrefix);
     }
 
     public String getStackedPrefix(Player player) {
         List<String> groups = new ArrayList<>(Arrays.asList(permission.getPlayerGroups(player)));
         Collections.reverse(groups);
         for (String group : groups) {
-            String prefix = chat.getGroupPrefix(player.getWorld(), group);
+            String prefix = groupPrefixCache.get(group);
             if (prefix != null && !prefix.isEmpty()) return prefix;
         }
         return "";
@@ -63,6 +70,12 @@ public class PrefixStacker extends JavaPlugin implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onPlayerJoin(PlayerJoinEvent event) {
+        Player p = event.getPlayer();
+        if (!hasSpecialPrefix(p)) chat.setPlayerPrefix(p, getStackedPrefix(p));
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onPlayerChat(AsyncPlayerChatEvent event) {
         Player p = event.getPlayer();
         if (!hasSpecialPrefix(p)) chat.setPlayerPrefix(p, getStackedPrefix(p));
     }
