@@ -19,21 +19,20 @@ public class PrefixStacker extends JavaPlugin implements Listener {
     public static Permission permission = null;
     public static Chat chat = null;
 
-    private static Map<String, String> groupPrefixCache = new ConcurrentHashMap<>();
+    private static Map<String, String> groupPrefixCache;
 
     @Override
     public void onEnable() {
         setupPermissions();
         setupChat();
         getServer().getPluginManager().registerEvents(this, this);
-        updateGroupPrefixCache();
         getCommand("psinvalidate").setExecutor(new InvalidateCommand());
     }
 
     public static void updateGroupPrefixCache() {
         for (String group : permission.getGroups()) {
             groupPrefixCache.put(group,
-                    chat.getGroupPrefix((World) null, group));
+                    chat.getGroupPrefix((String) null, group));
         }
     }
 
@@ -68,15 +67,23 @@ public class PrefixStacker extends JavaPlugin implements Listener {
         return "";
     }
 
-    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-    public void onPlayerJoin(PlayerJoinEvent event) {
-        Player p = event.getPlayer();
-        if (!hasSpecialPrefix(p)) chat.setPlayerPrefix(p, getStackedPrefix(p));
+    private void updatePrefix(Player p) {
+        if (groupPrefixCache == null) {
+            groupPrefixCache = new ConcurrentHashMap<>();
+            updateGroupPrefixCache();
+        }
+        if (!hasSpecialPrefix(p)) {
+            chat.setPlayerPrefix(p, getStackedPrefix(p));
+        }
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onPlayerJoin(PlayerJoinEvent event) {
+        updatePrefix(event.getPlayer());
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST)
     public void onPlayerChat(AsyncPlayerChatEvent event) {
-        Player p = event.getPlayer();
-        if (!hasSpecialPrefix(p)) chat.setPlayerPrefix(p, getStackedPrefix(p));
+        updatePrefix(event.getPlayer());
     }
 }
